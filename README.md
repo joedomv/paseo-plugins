@@ -10,11 +10,10 @@ Every Claude and Codex agent gets a composer pill like `CAVEMAN · PONYTAIL:ULTR
 paseo plugin install npm:paseo-plugin-status
 ```
 
-Or from a checkout:
+Or straight from GitHub (the plugin lives in the `plugin-status/` folder of the `paseo-plugins` repo):
 
 ```bash
-git clone https://github.com/joed/paseo-plugin-status
-paseo plugin install /absolute/path/to/paseo-plugin-status
+paseo plugin install github:joedomv/paseo-plugins:plugin-status
 ```
 
 Requires Paseo 0.9 or later with plugins enabled (Settings → Plugins) and a Claude or Codex provider.
