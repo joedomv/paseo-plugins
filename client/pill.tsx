@@ -26,7 +26,7 @@ function createPillIcon(agentId: string, pill: { current?: PluginButtonRegistrat
     let label = PENDING;
     if (query.data) {
       if (!query.data.sessionId) label = PENDING;
-      else label = pillLabel(query.data) || "no plugins";
+      else label = pillLabel(query.data) || "plugins";
     }
     useEffect(() => {
       pill.current?.update({ label });
