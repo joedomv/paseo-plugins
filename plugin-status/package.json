@@ -1,0 +1,43 @@
+{
+  "name": "paseo-plugin-status",
+  "version": "0.1.0",
+  "description": "Paseo plugin: shows which Claude Code and Codex plugins (caveman, ponytail, \u2026) are active in each agent chat, and at what level",
+  "license": "MIT",
+  "homepage": "https://github.com/joedomv/paseo-plugins/tree/main/plugin-status",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joedomv/paseo-plugins.git",
+    "directory": "plugin-status"
+  },
+  "type": "module",
+  "files": [
+    "paseo-plugin.json",
+    "OVERVIEW.md",
+    "index.client.tsx",
+    "index.server.ts",
+    "client/",
+    "server/",
+    "shared/",
+    "CHANGELOG.md",
+    "!**/*.test.ts"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@getpaseo/plugin": "0.14.0",
+    "@tanstack/react-query": "^5.90.11",
+    "@types/node": "^24.0.0",
+    "@types/react": "~19.2.0",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.0",
+    "zod": "^4.4.3"
+  }
+}
