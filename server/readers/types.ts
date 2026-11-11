@@ -1,9 +1,12 @@
 import type { PluginStatus } from "../../shared/status";
 
 export interface ReaderContext {
+  provider: "claude" | "codex";
   /** `$CLAUDE_CONFIG_DIR` or `~/.claude`. */
   claudeDir: string;
-  /** Claude session id; null until the session opens. */
+  /** `$CODEX_HOME` or `~/.codex`. */
+  codexDir: string;
+  /** Provider session id; null until the session opens. */
   sessionId: string | null;
   /** The agent's project directory. */
   cwd: string;
@@ -16,9 +19,9 @@ export interface ModeReading {
   note: string | null;
 }
 
-/** A mode-aware detector for one Claude Code plugin. */
+/** A mode-aware detector for one plugin. */
 export interface Reader {
-  /** Claude Code plugin name. */
+  /** Plugin name, the same in Claude Code and Codex marketplaces. */
   id: string;
   read(context: ReaderContext): Promise<ModeReading>;
   /** Pill text for a mode, or null when the mode means off. */

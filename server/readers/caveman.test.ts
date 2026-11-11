@@ -7,7 +7,7 @@ import { caveman } from "./caveman";
 
 let claudeDir: string;
 const sessionId = "11111111-2222-3333-4444-555555555555";
-const ctx = () => ({ claudeDir, sessionId, cwd: "/repo" });
+const ctx = () => ({ provider: "claude" as const, claudeDir, codexDir: "/nonexistent", sessionId, cwd: "/repo" });
 
 beforeEach(async () => {
   claudeDir = await mkdtemp(path.join(os.tmpdir(), "caveman-"));

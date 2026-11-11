@@ -31,7 +31,7 @@ function detail(p: PluginStatus, sessionOpen: boolean): { text: string; warn: bo
   if (p.mode) {
     return { text: `mode from ${SOURCE_LABEL[p.modeSource]}${p.modePath ? `: ${p.modePath}` : ""}`, warn: false };
   }
-  if (p.installed && p.enabledScope === "none") return { text: "disabled in Claude Code settings", warn: false };
+  if (p.installed && p.enabledScope === "none") return { text: "disabled in the provider's plugin settings", warn: false };
   if (!p.installed) return { text: "not installed", warn: false };
   if (p.hookActive && !p.reader) {
     return { text: `injects rules every session (${p.hookEvents.join(", ")}); no reader, so no level to show`, warn: false };
@@ -72,9 +72,9 @@ function Body({ theme, compact, agentId }: { theme: PluginHostProps["theme"]; co
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: theme.colors.surface0 }} contentContainerStyle={styles.screen}>
-      <Text style={styles.title}>Claude Code plugins</Text>
-      {provider !== "claude" ? (
-        <Text style={styles.warn}>Claude Code plugins apply only to Claude agents.</Text>
+      <Text style={styles.title}>{provider === "codex" ? "Codex" : "Claude Code"} plugins</Text>
+      {provider !== "claude" && provider !== "codex" ? (
+        <Text style={styles.warn}>Plugin status covers Claude and Codex agents only.</Text>
       ) : sessionId ? (
         <Text style={styles.muted}>session {sessionId} · {cwd}</Text>
       ) : (
@@ -87,7 +87,7 @@ function Body({ theme, compact, agentId }: { theme: PluginHostProps["theme"]; co
           ))}
         </View>
       ) : null}
-      {plugins.length === 0 ? <Text style={styles.muted}>No hook-active Claude Code plugins.</Text> : null}
+      {plugins.length === 0 ? <Text style={styles.muted}>No hook-active plugins.</Text> : null}
       {plugins.map((p) => {
         const nameStyle = p.badge ? styles.on : p.enabledScope === "none" ? styles.off : styles.name;
         const level = p.badge ?? p.mode ?? "—";

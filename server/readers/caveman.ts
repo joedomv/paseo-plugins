@@ -32,7 +32,10 @@ async function defaultModeConfigured(claudeDir: string): Promise<boolean> {
 
 export const caveman: Reader = {
   id: "caveman",
-  async read({ claudeDir, sessionId }: ReaderContext): Promise<ModeReading> {
+  async read({ provider, claudeDir, sessionId }: ReaderContext): Promise<ModeReading> {
+    if (provider !== "claude") {
+      return { mode: null, source: "none", path: null, note: "caveman 4 runs only under Claude Code" };
+    }
     if (sessionId) {
       const file = path.join(claudeDir, ".caveman-sessions", `${sessionId}.mode`);
       const mode = await readText(file);

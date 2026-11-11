@@ -11,7 +11,7 @@ import { followAgents, type AgentList, type AgentUpdate } from "./agents";
 import { createStatusPopover } from "./popover";
 import { useStatusQuery } from "./status-query";
 
-const TITLE = "Claude Code plugins";
+const TITLE = "Plugins";
 const PENDING = "plugins…";
 
 /**
@@ -70,7 +70,7 @@ export function contributePills(
   }
 
   function consider(agent: { id: string; workspaceId?: string | null; provider: string }) {
-    if (agent.provider === "claude" && agent.workspaceId) addPill(agent.id, agent.workspaceId);
+    if ((agent.provider === "claude" || agent.provider === "codex") && agent.workspaceId) addPill(agent.id, agent.workspaceId);
     else removePill(agent.id);
   }
 

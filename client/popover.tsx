@@ -61,14 +61,14 @@ function Body({ theme, agentId, openTab }: { theme: PluginHostProps["theme"]; ag
       <Pressable accessibilityRole="button" accessibilityLabel="Open the Plugins tab" hitSlop={8} onPress={openTab}>
         <Text style={styles.link}>Open tab</Text>
       </Pressable>
-      {provider !== "claude" ? (
-        <Text style={styles.warn}>Claude Code plugins apply only to Claude agents.</Text>
+      {provider !== "claude" && provider !== "codex" ? (
+        <Text style={styles.warn}>Plugin status covers Claude and Codex agents only.</Text>
       ) : sessionId ? (
         <Text style={styles.muted}>session {sessionId}</Text>
       ) : (
         <Text style={styles.warn}>Session not open yet. Plugins load on the first turn.</Text>
       )}
-      {plugins.length === 0 ? <Text style={styles.muted}>No hook-active Claude Code plugins.</Text> : null}
+      {plugins.length === 0 ? <Text style={styles.muted}>No hook-active plugins.</Text> : null}
       {plugins.map((p) => (
         <View key={p.id} style={{ gap: 2 }}>
           <Text style={p.badge ? styles.on : styles.title}>
@@ -83,7 +83,7 @@ function Body({ theme, agentId, openTab }: { theme: PluginHostProps["theme"]; ag
             {p.hookEvents.length ? ` (${p.hookEvents.join(", ")})` : ""}
           </Text>
           {p.installed && p.enabledScope === "none" ? (
-            <Text style={styles.muted}>disabled in Claude Code settings</Text>
+            <Text style={styles.muted}>disabled in the provider's plugin settings</Text>
           ) : null}
           {p.mode ? (
             <Text style={styles.muted}>

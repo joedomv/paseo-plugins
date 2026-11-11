@@ -6,14 +6,53 @@ import {
   enabledScope,
   hookEvents,
   injectsIntoSession,
-  installedPlugins,
+  installedPlugins as claudePlugins,
   shipsCommands,
 } from "./claude-code";
+import { codexDir, installedPlugins as codexPlugins } from "./codex";
 import { readers } from "./readers";
+import type { ReaderContext } from "./readers";
 
-/** Command names a Claude session reports for plugins look like `plugin:command`. */
+/** Command names a session reports for plugins look like `plugin:command`. */
 function loadedNamespaces(commands: Array<{ name: string }>): Set<string> {
   return new Set(commands.map((c) => c.name.split(":")[0]));
+}
+
+interface Candidate {
+  name: string;
+  version: string | null;
+  installPath: string | null;
+  scope: PluginStatus["enabledScope"];
+  events: string[];
+}
+
+async function claudeCandidates(dir: string, cwd: string): Promise<Candidate[]> {
+  const out: Candidate[] = [];
+  for (const p of await claudePlugins(dir)) {
+    out.push({
+      name: p.name,
+      version: p.version,
+      installPath: p.installPath,
+      scope: await enabledScope(p.key, dir, cwd),
+      events: p.installPath ? await hookEvents(p.installPath) : [],
+    });
+  }
+  return out;
+}
+
+// shortcut: Codex's project-level `.codex/config.toml` plugin tables are ignored; add when someone needs per-repo toggles
+async function codexCandidates(dir: string): Promise<Candidate[]> {
+  const out: Candidate[] = [];
+  for (const p of await codexPlugins(dir)) {
+    out.push({
+      name: p.name,
+      version: p.version,
+      installPath: p.installPath,
+      scope: p.enabled ? "user" : "none",
+      events: p.installPath ? await hookEvents(p.installPath, ".codex-plugin/plugin.json") : [],
+    });
+  }
+  return out;
 }
 
 export async function detect(agentId: string, { paseo }: PluginHandlerContext): Promise<StatusReport> {
@@ -23,7 +62,8 @@ export async function detect(agentId: string, { paseo }: PluginHandlerContext): 
   if (!agent) throw new Error(`Agent not found: ${agentId}`);
   const sessionId = handle.runtimeInfo?.sessionId ?? null;
   const cwd = agent.cwd;
-  const dir = claudeDir();
+  const provider = agent.provider;
+  if (provider !== "claude" && provider !== "codex") return { provider, sessionId, cwd, plugins: [] };
 
   let loaded: Set<string> | null = null;
   if (sessionId) {
@@ -34,37 +74,43 @@ export async function detect(agentId: string, { paseo }: PluginHandlerContext): 
     }
   }
 
-  const installed = await installedPlugins(dir);
+  const dirs = { claudeDir: claudeDir(), codexDir: codexDir() };
+  const candidates = provider === "claude" ? await claudeCandidates(dirs.claudeDir, cwd) : await codexCandidates(dirs.codexDir);
   const plugins: PluginStatus[] = [];
   const seen = new Set<string>();
 
-  for (const plugin of installed) {
+  for (const plugin of candidates) {
     seen.add(plugin.name);
     const reader = readers.find((r) => r.id === plugin.name);
-    const events = plugin.installPath ? await hookEvents(plugin.installPath) : [];
-    if (!reader && !injectsIntoSession(events)) continue;
-    const scope = await enabledScope(plugin.key, dir, cwd);
-    const enabled = scope !== "none";
-    const hookActive = enabled && injectsIntoSession(events);
+    if (!reader && !injectsIntoSession(plugin.events)) continue;
+    const enabled = plugin.scope !== "none";
+    const hookActive = enabled && injectsIntoSession(plugin.events);
     const canLoad = plugin.installPath ? await shipsCommands(plugin.installPath) : true;
+    const context: ReaderContext = { provider, ...dirs, sessionId, cwd };
     const reading =
       reader && enabled && sessionId
-        ? await reader.read({ claudeDir: dir, sessionId, cwd })
+        ? await reader.read(context)
         : { mode: null, source: "none" as const, path: null, note: null };
+    // Codex runs plugin hooks only after the user trusts them, so a reader with nothing to read is the usual first state.
+    const note =
+      reading.note ??
+      (provider === "codex" && hookActive && reader && reading.mode === null && sessionId
+        ? "no state recorded; Codex runs plugin hooks only after you trust them (/hooks in Codex, or Settings > Hooks)"
+        : null);
     plugins.push({
       id: plugin.name,
       version: plugin.version,
       installed: true,
-      enabledScope: scope,
+      enabledScope: plugin.scope,
       loaded: loaded === null || !canLoad ? null : loaded.has(plugin.name),
       hookActive,
-      hookEvents: events,
+      hookEvents: plugin.events,
       reader: Boolean(reader),
       mode: reading.mode,
       modeSource: reading.source,
       modePath: reading.path,
       badge: reader && reading.mode ? reader.badge(reading.mode) : null,
-      note: reading.note,
+      note,
     });
   }
 
@@ -89,5 +135,5 @@ export async function detect(agentId: string, { paseo }: PluginHandlerContext): 
   }
 
   plugins.sort((a, b) => Number(Boolean(b.badge)) - Number(Boolean(a.badge)) || a.id.localeCompare(b.id));
-  return { provider: agent.provider, sessionId, cwd, plugins };
+  return { provider, sessionId, cwd, plugins };
 }

@@ -82,8 +82,8 @@ async function eventsFromFile(file: string): Promise<string[]> {
  * object, a path, or a list of paths to `{ "hooks": { … } }` files; with no
  * field Claude Code loads `hooks/hooks.json` when present.
  */
-export async function hookEvents(installPath: string): Promise<string[]> {
-  const manifest = (await readJson(path.join(installPath, ".claude-plugin", "plugin.json"))) as {
+export async function hookEvents(installPath: string, manifestFile = ".claude-plugin/plugin.json"): Promise<string[]> {
+  const manifest = (await readJson(path.join(installPath, manifestFile))) as {
     hooks?: unknown;
   } | null;
   const hooks = manifest?.hooks;

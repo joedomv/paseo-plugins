@@ -7,7 +7,7 @@ import { ponytail, repoModePath } from "./ponytail";
 
 let claudeDir: string;
 const cwd = "/Users/joed/workspace/personal";
-const ctx = () => ({ claudeDir, sessionId: "s", cwd });
+const ctx = () => ({ provider: "claude" as const, claudeDir, codexDir: "/nonexistent", sessionId: "s", cwd });
 
 beforeEach(async () => {
   claudeDir = await mkdtemp(path.join(os.tmpdir(), "ponytail-"));
@@ -44,6 +44,17 @@ describe("ponytail reader", () => {
     await writeFile(path.join(claudeDir, ".ponytail-active"), "ultra");
     const r = await ponytail.read(ctx());
     expect(r).toMatchObject({ mode: "ultra", source: "shared-flag" });
+  });
+
+  it("locates the Codex shared flag under plugins/data", async () => {
+    const codexDir = await mkdtemp(path.join(os.tmpdir(), "codex-"));
+    const data = path.join(codexDir, "plugins", "data", "ponytail", "ponytail");
+    await mkdir(data, { recursive: true });
+    await writeFile(path.join(data, ".ponytail-active"), "ultra");
+    const r = await ponytail.read({ provider: "codex", claudeDir, codexDir, sessionId: "t", cwd });
+    expect(r).toMatchObject({ mode: "ultra", source: "shared-flag", path: path.join(data, ".ponytail-active") });
+    expect(r.note).toMatch(/Codex/);
+    expect(await ponytail.read({ provider: "codex", claudeDir, codexDir: "/nonexistent", sessionId: "t", cwd })).toMatchObject({ mode: null });
   });
 
   it("isolates repos", async () => {
