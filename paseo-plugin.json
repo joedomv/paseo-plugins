@@ -1,0 +1,8 @@
+{
+  "id": "plugin-status",
+  "name": "Plugin status",
+  "description": "Shows which Claude Code plugins (caveman, ponytail, …) are active in each chat, and at what level",
+  "requirements": {
+    "paseo": ">=0.9.0"
+  }
+}
