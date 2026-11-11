@@ -1,6 +1,6 @@
 import type { PluginButtonContentProps, PluginHostProps } from "@getpaseo/plugin/client";
 import { useMemo } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import type { PluginStatus } from "../shared/status";
 import { useStatusQuery } from "./status-query";
@@ -16,12 +16,27 @@ function yesNo(value: boolean | null): string {
   return value === null ? "?" : value ? "✓" : "✗";
 }
 
-export function StatusPopover(props: PluginButtonContentProps) {
-  if (props.context !== "agent") return null;
-  return <Body theme={props.theme} agentId={props.agentId} />;
+type Target = { workspaceId: string; agentId: string };
+
+/** Built once per client entry; `openTab` opens the Plugins tab for the pill's agent. */
+export function createStatusPopover(openTab: (target: Target) => void) {
+  return function StatusPopover(props: PluginButtonContentProps) {
+    if (props.context !== "agent") return null;
+    const target = { workspaceId: props.workspaceId, agentId: props.agentId };
+    return (
+      <Body
+        theme={props.theme}
+        agentId={props.agentId}
+        openTab={() => {
+          openTab(target);
+          props.close();
+        }}
+      />
+    );
+  };
 }
 
-function Body({ theme, agentId }: { theme: PluginHostProps["theme"]; agentId: string }) {
+function Body({ theme, agentId, openTab }: { theme: PluginHostProps["theme"]; agentId: string; openTab: () => void }) {
   const query = useStatusQuery(agentId);
   const styles = useMemo(
     () => ({
@@ -32,6 +47,7 @@ function Body({ theme, agentId }: { theme: PluginHostProps["theme"]; agentId: st
       body: { color: theme.colors.foreground, fontSize: 12 },
       warn: { color: theme.colors.statusWarning, fontSize: 12 },
       danger: { color: theme.colors.statusDanger, fontSize: 12 },
+      link: { color: theme.colors.accent, fontSize: 12 },
     }),
     [theme],
   );
@@ -42,6 +58,9 @@ function Body({ theme, agentId }: { theme: PluginHostProps["theme"]; agentId: st
 
   return (
     <View style={styles.root}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Open the Plugins tab" hitSlop={8} onPress={openTab}>
+        <Text style={styles.link}>Open tab</Text>
+      </Pressable>
       {provider !== "claude" ? (
         <Text style={styles.warn}>Claude Code plugins apply only to Claude agents.</Text>
       ) : sessionId ? (

@@ -8,7 +8,7 @@ import { useEffect } from "react";
 
 import { pillLabel } from "../shared/status";
 import { followAgents, type AgentList, type AgentUpdate } from "./agents";
-import { StatusPopover } from "./popover";
+import { createStatusPopover } from "./popover";
 import { useStatusQuery } from "./status-query";
 
 const TITLE = "Claude Code plugins";
@@ -36,7 +36,11 @@ function createPillIcon(agentId: string, pill: { current?: PluginButtonRegistrat
 }
 
 /** One pill per Claude agent on the host, for the client entry's lifetime. */
-export function contributePills(client: PluginClientContext) {
+export function contributePills(
+  client: PluginClientContext,
+  openTab: (target: { workspaceId: string; agentId: string }) => void,
+) {
+  const Popover = createStatusPopover(openTab);
   const pills = new Map<string, { workspaceId: string; registration: PluginButtonRegistration }>();
   let stopped = false;
 
@@ -54,7 +58,7 @@ export function contributePills(client: PluginClientContext) {
         title: TITLE,
         label: PENDING,
         icon: createPillIcon(agentId, pill),
-        behavior: { kind: "popover", Content: StatusPopover },
+        behavior: { kind: "popover", Content: Popover },
       },
     });
     pills.set(agentId, { workspaceId, registration: pill.current });
